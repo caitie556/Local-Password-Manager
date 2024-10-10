@@ -1,11 +1,13 @@
 import unittest
 from Password_Manager.password_manager import PasswordManager
-# Run using python -m folder2.main from parent folder
+# Run using python -m Tests.password_manager_tests from parent folder
 
 class TestPasswordManager(unittest.TestCase):
     
     def setUp(self) -> None:
         self.pass_manager = PasswordManager()
+        file = open("pswrds.txt", "w")
+        file.close()
         return super().setUp()
 
     def test_add_password(self):

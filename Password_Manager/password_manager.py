@@ -62,11 +62,8 @@ class PasswordManager:
                 for line in lines:
                     params = line.strip().split(",")
                     self.password_dict[(params[0], params[1])] = params[2]
-                file.close()
-        else:
-            print("File does not exist.")        
+                file.close()       
 
-'''
 def main():
     manager = PasswordManager()
     # Perform user actions
@@ -77,4 +74,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-'''
