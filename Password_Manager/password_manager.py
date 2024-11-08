@@ -1,8 +1,10 @@
 from cryptography.fernet import Fernet
 from pathlib import Path
+import random
+import string
 
 class PasswordManager:
-    # format: (website, username) = hashed password
+    # format: (website, username) = encrypted password
     password_dict = {}
     encryption_key = Fernet.generate_key()
 
@@ -43,6 +45,68 @@ class PasswordManager:
             return decrypted_password
         except Exception as e:
             return "Error: (" + website + ", " + username + ") not found"
+        
+    # Generates a random password with varying strengths
+    # Example:
+    # 1 = 6 characters
+    # 2 = 8 characters with atleast one lowercase, one uppercase and a number
+    # 3 = 10 characters with atleast one lowercase, one uppercase, a number and special character
+    # Args:
+    #   strength: int corresponting with the desired strength of generated password
+    # Returns: 
+    #   String of generated password
+    #   if key isnt found, return error message
+    def generate_password(self, strength: int) -> str:
+        try:
+            generated_password = []
+            if (strength >= 1):
+                # Generate inital password of 6 chars for lovers level
+                generated_password = [random.choice(string.ascii_letters) for _ in range(6)]
+                if (strength >= 2):
+                    # Generate an additional 2 characters for level 2
+                    generated_password.append(random.choice(string.ascii_letters + string.digits))
+                    generated_password.append(random.choice(string.ascii_letters + string.digits))
+                    
+                    # Generate random amount of uppercase letters
+                    uppercase_desired = random.randint(1, 4)
+                    # Add the desired amount of uppercases
+                    for i in range(1, uppercase_desired):
+                        index = random.randint(0, len(generated_password))
+                        c = random.choice(string.ascii_uppercase)
+                        generated_password.insert(index, c)
+                            
+                    # Generate random amount of lowercase letters
+                    lowercase_desired = random.randint(1, 4)
+                    # Add the desired amount of lowercases
+                    for i in range(1, lowercase_desired):
+                        index = random.randint(0, len(generated_password))
+                        c = random.choice(string.ascii_lowercase)
+                        generated_password.insert(index, c)
+
+                    # Generate random amount of numbers
+                    nums_desired = random.randint(1, 4)
+                    # Add the desired amount of numbers
+                    for i in range(1, nums_desired):
+                        index = random.randint(0, len(generated_password))
+                        num = random.choice(string.digits)
+                        generated_password.insert(index, num)
+
+                    if (strength >= 3):
+                        # Generate an additional 2 characters for level 3
+                        generated_password.append(random.choice(string.ascii_letters + string.digits))
+                        generated_password.append(random.choice(string.ascii_letters + string.digits))
+
+                        # Generate random amount of special characters
+                        specials_desired = random.randint(1, 4)
+                        special_chars = "~`! @#$%^&*()_-+={[}]|\:;\"'<,>.?/"
+                        # Add the desired amount of special characters
+                        for i in range(1, specials_desired):
+                            index = random.randint(0, len(generated_password))
+                            c = random.choice(special_chars)
+                            generated_password.insert(index, c)
+            return ''.join(generated_password)
+        except Exception as e:
+            return "Error: password not generated"
 
     # Saves password_dict to file
     def save_account_info(self):
@@ -67,9 +131,10 @@ class PasswordManager:
 def main():
     manager = PasswordManager()
     # Perform user actions
-    manager.enter_account_info("Facebook.com", "user1", "123456")
+    #manager.enter_account_info("Facebook.com", "user1", "123456")
     #manager.enter_account_info("Facebook.com", "user2", "abcdef")
-    print(manager.get_password("Facebook.com", "user1"))
+    #print(manager.get_password("Facebook.com", "user1"))
+    print(manager.generate_password(3))
     manager.save_account_info()
 
 if __name__ == "__main__":

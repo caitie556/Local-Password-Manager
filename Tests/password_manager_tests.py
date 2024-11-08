@@ -17,5 +17,13 @@ class TestPasswordManager(unittest.TestCase):
         self.pass_manager.enter_account_info("Facebook.com", "user1", "123456")
         self.assertEqual(self.pass_manager.get_password("Facebook.com", "user1"), "123456")
 
+    def test_generate_password(self):
+        genPass = self.pass_manager.generate_password(1)
+        self.assertTrue(len(genPass) > 0)
+        genPass = self.pass_manager.generate_password(2)
+        self.assertTrue(len(genPass) > 0)
+        genPass = self.pass_manager.generate_password(3)
+        self.assertTrue(len(genPass) > 0)
+
 if __name__ == "__main__":
     unittest.main()
