@@ -9,7 +9,43 @@ class PasswordManager:
     encryption_key = Fernet.generate_key()
 
     def __init__(self) -> None:
-        self.load_account_info()        
+        self.load_account_info()  
+
+    # Have user set pin for the manager
+    # Saves pin to password_dict temporarily
+    # Args:
+    #   plaintext_pin: int containing pin before encryption
+    # Returns: 
+    #   True if pin is saved in password_dict
+    #   False otherwise
+    def set_pin(self, plaintext_pin: int) -> bool:
+        try:
+            cipher = Fernet(self.encryption_key)
+            encrypted_pin = cipher.encrypt(str(plaintext_pin).encode())
+            self.password_dict[("pin", "pin")] = encrypted_pin
+        except Exception as e:
+            print("Pin save unsuccessfull") 
+            return False
+        return True   
+
+    # Check pin for the manager
+    # Args:
+    #   plaintext_pin: str containing user entered pin
+    # Returns: 
+    #   True if pin matches saved pin
+    #   False otherwise
+    def check_pin(self, plaintext_pin: str) -> bool:
+        try:
+            if ('pin', 'pin') in self.password_dict.items():
+                encrypted_pin = self.password_dict[('pin', 'pin')]
+                cipher = Fernet(self.encryption_key)
+                decrypted_pin = cipher.decrypt(encrypted_pin).decode()
+                return decrypted_pin == plaintext_pin
+            else:
+                return self.set_pin(int(plaintext_pin))
+        except Exception as e:
+            print("Pin save unsuccessfull") 
+            return False   
 
     # Have user enter account information
     # Saves information to password_dict temporarily
@@ -110,32 +146,47 @@ class PasswordManager:
 
     # Saves password_dict to file
     def save_account_info(self):
-        file = open("pswrds.txt", "w")
-        keys = self.password_dict.keys()
-        for tuple in keys:
-            concat_string = tuple[0] + "," + tuple[1] + "," + self.password_dict[tuple].decode('utf-8') + "\n"
-            file.write(concat_string)
-        file.close()
+        file = open("pswrds.txt", "wb")
+        file.write(self.encryption_key + b'\n')
+        for (website, username), encrypted_pass in self.password_dict.items():
+            cipher = Fernet(self.encryption_key)
+            encrypted_website = cipher.encrypt(website.encode('utf-8'))
+            encrypted_username = cipher.encrypt(username.encode('utf-8'))
+            concat_string = f"{encrypted_website},{encrypted_username},{encrypted_pass.decode('utf-8')}\n"
+            file.write(concat_string.encode())
 
     # Load account information into password_dict from file
     def load_account_info(self):
         file_path = Path('pswrds.txt')
         if file_path.exists():
-            with file_path.open('r') as file:
+            with file_path.open('rb') as file:
+                self.encryption_key = file.readline().strip()
+                if (self.encryption_key == b''):
+                        self.encryption_key = Fernet.generate_key()
+                cipher = Fernet(self.encryption_key)
                 lines = file.readlines()
                 for line in lines:
-                    params = line.strip().split(",")
-                    self.password_dict[(params[0], params[1])] = params[2]
-                file.close()       
+                    line_str = line.decode('utf-8').strip()
+                    params = line_str.strip().split(",")
+                    encrypted_website = params[0][2:-1].encode('utf-8')
+                    encrypted_username = params[1][2:-1].encode('utf-8')
+                    encrypted_pass = params[2].encode('utf-8')
+                    website = cipher.decrypt(encrypted_website).decode('utf-8')
+                    username = cipher.decrypt(encrypted_username).decode('utf-8') 
+                    self.password_dict[(website, username)] = encrypted_pass
+            file.close()       
 
 def main():
     manager = PasswordManager()
     # Perform user actions
+    #manager.set_pin(1234)
     #manager.enter_account_info("Facebook.com", "user1", "123456")
     #manager.enter_account_info("Facebook.com", "user2", "abcdef")
+    
     #print(manager.get_password("Facebook.com", "user1"))
-    print(manager.generate_password(3))
-    manager.save_account_info()
+    #print(manager.get_password("Facebook.com", "user2"))
+    #print(manager.check_pin('1234'))
+    #manager.save_account_info()
 
 if __name__ == "__main__":
     main()

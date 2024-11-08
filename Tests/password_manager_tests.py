@@ -25,5 +25,14 @@ class TestPasswordManager(unittest.TestCase):
         genPass = self.pass_manager.generate_password(3)
         self.assertTrue(len(genPass) > 0)
 
+    def test_set_pin(self):
+        self.assertTrue(self.pass_manager.set_pin(1234))
+
+    def test_check_pin(self):
+        self.pass_manager.set_pin(1234)
+        self.assertTrue(self.pass_manager.check_pin('1234'))
+        self.assertFalse(self.pass_manager.check_pin('2345'))
+
+
 if __name__ == "__main__":
     unittest.main()
