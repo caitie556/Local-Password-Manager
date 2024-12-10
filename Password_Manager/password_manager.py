@@ -82,6 +82,18 @@ class PasswordManager:
         except Exception as e:
             return "Error: (" + website + ", " + username + ") not found"
         
+    # Gets the (website, username) pairs in the manager
+    # Returns: 
+    #   if password dict is not empty, returns list of (website, username)
+    #   if password dict is empty, returns empty list
+    def get_keys(self) -> list[(str, str)]:
+        if len(self.password_dict) > 0:
+            result = list(self.password_dict.keys())
+            result.remove(('pin', 'pin'))
+            return result
+        else:
+            return []
+        
     # Generates a random password with varying strengths
     # Example:
     # 1 = 6 characters
@@ -179,14 +191,16 @@ class PasswordManager:
 def main():
     manager = PasswordManager()
     # Perform user actions
-    #manager.set_pin(1234)
-    #manager.enter_account_info("Facebook.com", "user1", "123456")
-    #manager.enter_account_info("Facebook.com", "user2", "abcdef")
+    manager.set_pin(1234)
+    manager.enter_account_info("Facebook.com", "user1", "123456")
+    manager.enter_account_info("Facebook.com", "user2", "abcdef")
     
     #print(manager.get_password("Facebook.com", "user1"))
     #print(manager.get_password("Facebook.com", "user2"))
     #print(manager.check_pin('1234'))
-    #manager.save_account_info()
+    manager.save_account_info()
+    #keys = manager.get_keys()
+    #print(keys)
 
 if __name__ == "__main__":
     main()
