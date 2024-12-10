@@ -13,24 +13,6 @@ def check_pin():
     else:
         error_label.config(text="Incorrect PIN. Try again!")
 
-def add_account():
-    web = website_entry.get()
-    user = user_entry.get()
-    pswrd = pass_entry.get()
-    if (password_manager.enter_account_info(web, user, pswrd)):
-        status_label.config(text="Password successfully added", fg="green")
-
-        for widget in home_frame.winfo_children():
-            if isinstance(widget, tk.Label) and widget != home_label:
-                widget.destroy()
-
-        keys = password_manager.get_keys()
-        for website, username in keys:
-            label = tk.Label(home_frame, text=f"Website: {website}, Username: {username}")
-            label.pack()
-    else:
-        status_label.config(text="Password cannot be added", fg="red")
-
 def log_out():
     password_manager.save_account_info()
     show_frame(login_frame)
@@ -78,7 +60,31 @@ add_button.pack()
 logout_button = tk.Button(home_frame, text="Log Out", command=log_out)
 logout_button.pack()
 
-keys = password_manager.get_keys()
+search_label = tk.Label(home_frame, text="Search Passwords")
+search_label.pack()
+
+def filter_accounts(event):
+    # Clear existing account entries
+    for widget in home_frame.winfo_children():
+        if isinstance(widget, tk.Label) and widget not in [home_label, search_label]:
+            widget.destroy()
+        elif isinstance(widget, tk.Button) and widget not in [generate_button, add_button, logout_button]:
+            widget.destroy()
+    
+    # Get the search term
+    search_term = search_box.get().lower()
+
+    keys = password_manager.get_keys()
+    
+    # Filter and recreate entries
+    filtered_keys = [
+        (website, username)
+        for website, username in keys
+        if search_term in website.lower() or search_term in username.lower()
+    ]
+    
+    for website, username in filtered_keys:
+        create_entry(website, username)
 
 def create_entry(website, username):
     password = ""
@@ -103,22 +109,28 @@ def create_entry(website, username):
     button = tk.Button(home_frame, text="Show Password", command=toggle_password)
     button.pack()
 
+search_box = tk.Entry(home_frame)
+search_box.bind("<KeyRelease>", filter_accounts)
+search_box.pack()
+
+keys = password_manager.get_keys()
+
 for website, username in keys:
     create_entry(website, username)
 
 # Generate Password screen
+generated_password = ""
+
 def generate_password(strength):
+    global generated_password
     generated_password = password_manager.generate_password(strength)
-    password_label.config(text=f"Generated Password: {generated_password}")
+    password_label.config(text=f"Generated Password: {generated_password}")    
 
-    def copy_to_clipboard():
-        root.clipboard_clear()
-        root.clipboard_append(generated_password)
-        root.update()
-        copy_status_label.config(text="Password copied!", fg="green")
-
-    copy_button = tk.Button(generate_frame, text="Copy Password", command=copy_to_clipboard)
-    copy_button.pack()
+def copy_to_clipboard():
+    root.clipboard_clear()
+    root.clipboard_append(generated_password)
+    root.update()
+    copy_status_label.config(text="Password copied!", fg="green")    
 
 
 generate_label = tk.Label(generate_frame, text="Generate Password")
@@ -139,10 +151,24 @@ level_three_button.pack()
 password_label = tk.Label(generate_frame, text="Generated Password: ")
 password_label.pack()
 
+copy_button = tk.Button(generate_frame, text="Copy Password", command=copy_to_clipboard)
+copy_button.pack()
+
 copy_status_label = tk.Label(generate_frame, text="", fg="green")
 copy_status_label.pack()
 
 # Add account screen
+def add_account():
+    web = website_entry.get()
+    user = user_entry.get()
+    pswrd = pass_entry.get()
+    if (password_manager.enter_account_info(web, user, pswrd)):
+        status_label.config(text="Password successfully added", fg="green")
+
+        create_entry(web, user)
+    else:
+        status_label.config(text="Password cannot be added", fg="red")
+
 add_label = tk.Label(add_account_frame, text="Enter Account Information:")
 add_label.pack(pady=10)
 
